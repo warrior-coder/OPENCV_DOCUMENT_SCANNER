@@ -3,6 +3,8 @@
 #include <array>
 #include <vector>
 #include <cmath>
+#include <string>
+#include <algorithm>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -29,32 +31,43 @@ using AspectRatio = cv::Size2d;
 
 class DocumentScanner
 {
-	cv::Mat imgOrig, imgGray, imgBlur, imgCan, imgDil, imgCont;
-	cv::Mat imgWarp;
-	cv::Mat imgDoc;
+	cv::Mat _imgOrig;
+	cv::Mat _imgBlur, _imgGray, _imgCan, _imgDil, _imgCont;
+	cv::Mat _imgWarp;
+	cv::Mat _imgDoc;
 
-	AspectRatio aspectRatio;
-	cv::Size documentSize;
-	int cropBorder;
+	AspectRatio _aspectRatio;
+	cv::Size _documentSize;
+	int _cropBorder;
+	double _showScale;
 
-	std::array<cv::Point, 4> documentContour;
+	std::array<cv::Point, 4> _documentContour;
 	
-	bool documentDetected;
+	bool _documentDetected;
 
-	double lineLength(cv::Point point1, cv::Point point2);
+	double _LineLength(const cv::Point& point1, const cv::Point& point2);
 
 public:
 
 	DocumentScanner();
-	void readImage(std::string path);
-	void setCropBorder(int cropBorder);
+	~DocumentScanner() = default;
 
-	void showImage(Image image);
-	cv::Mat& getDocument();
-	void showDocument();
-	void setAspectRatio(double x, double y);
-	void setAspectRatio(DocumentFormat documentFormat);
+	void ReadImage(const std::string& filePath);
+	void SetCropBorder(int cropBorder);
 
-	void detectDocument();
-	bool idDocumentDetected();
+	void ShowImage(const Image imageFlag) const;
+	void ShowDocument() const;
+
+	cv::Mat& GetDocument();
+
+	void SetAspectRatio(double x, double y);
+	void SetAspectRatio(const DocumentFormat documentFormat);
+	void SetShowScale(double showScale);
+
+	void DetectDocument();
+
+	bool IsEmpty() const;
+	bool IsDocumentDetected() const;
+
+	[[maybe_unused]] int WaitKey(int delay = 0) const;
 };

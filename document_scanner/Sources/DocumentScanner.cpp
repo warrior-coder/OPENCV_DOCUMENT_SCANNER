@@ -1,7 +1,7 @@
 #include "DocumentScanner.hpp"
 
 
-double DocumentScanner::lineLength(cv::Point point1, cv::Point point2)
+double DocumentScanner::_LineLength(const cv::Point& point1, const cv::Point& point2)
 {
 	return sqrt(
 		(point2.x - point1.x) * (point2.x - point1.x) + (point2.y - point1.y) * (point2.y - point1.y)
@@ -9,186 +9,159 @@ double DocumentScanner::lineLength(cv::Point point1, cv::Point point2)
 }
 
 DocumentScanner::DocumentScanner()
-	: cropBorder(0)
-	, documentDetected(false)
-	, aspectRatio(0.0, 0.0)
-	, documentSize(0, 0)
+	: _cropBorder(0)
+	, _documentDetected(false)
+	, _aspectRatio(0.0, 0.0)
+	, _documentSize(0, 0)
+	, _showScale(1.0)
 {}
 
-void DocumentScanner::readImage(std::string path)
+void DocumentScanner::ReadImage(const std::string& filePath)
 {
-	imgOrig = cv::imread(path);
+	_imgOrig = cv::imread(filePath);
 }
 
-void DocumentScanner::setCropBorder(int cropBorder)
+void DocumentScanner::SetCropBorder(int cropBorder)
 {
-	this->cropBorder = cropBorder;
+	_cropBorder = cropBorder;
 }
 
-void setShowScale(double fx, double fy)
+void DocumentScanner::SetShowScale(double showScale)
 {
-	
+	_showScale = showScale;
 }
 
-void DocumentScanner::showImage(Image image)
+void DocumentScanner::ShowImage(const Image imageFlag) const
 {
 	cv::Mat imgShow;
-	double fx = 0.1;
-	double fy = 0.1;
-
-	switch (image)
+	
+	switch (imageFlag)
 	{
 	case Image::ORIGINAL:
 	{
-		if (imgOrig.empty()) throw std::exception("no_image_to_show");
+		if (_imgOrig.empty()) throw std::exception("NO_IMAGE_TO_SHOW");
 
-		cv::resize(imgOrig, imgShow, cv::Size(), fx, fy, cv::INTER_AREA);
+		cv::resize(_imgOrig, imgShow, cv::Size(), _showScale, _showScale, cv::INTER_AREA);
 		imshow("Image Original", imgShow);
 
 		break;
 	}
 	case Image::BLUR:
 	{
-		if (imgBlur.empty()) throw std::exception("no_image_to_show");
+		if (_imgBlur.empty()) throw std::exception("NO_IMAGE_TO_SHOW");
 
-		cv::resize(imgBlur, imgShow, cv::Size(), fx, fy, cv::INTER_AREA);
+		cv::resize(_imgBlur, imgShow, cv::Size(), _showScale, _showScale, cv::INTER_AREA);
 		imshow("Image Blur", imgShow);
 
 		break;
 	}
 	case Image::GRAY:
 	{
-		if (imgGray.empty()) throw std::exception("no_image_to_show");
+		if (_imgGray.empty()) throw std::exception("NO_IMAGE_TO_SHOW");
 
-		cv::resize(imgGray, imgShow, cv::Size(), fx, fy, cv::INTER_AREA);
+		cv::resize(_imgGray, imgShow, cv::Size(), _showScale, _showScale, cv::INTER_AREA);
 		imshow("Image Gray", imgShow);
 
 		break;
 	}
 	case Image::CANNY:
 	{
-		if (imgCan.empty()) throw std::exception("no_image_to_show");
+		if (_imgCan.empty()) throw std::exception("NO_IMAGE_TO_SHOW");
 
-		cv::resize(imgCan, imgShow, cv::Size(), fx, fy, cv::INTER_AREA);
+		cv::resize(_imgCan, imgShow, cv::Size(), _showScale, _showScale, cv::INTER_AREA);
 		imshow("Image Canny", imgShow);
 
 		break;
 	}
 	case Image::DILATE:
 	{
-		if (imgDil.empty()) throw std::exception("no_image_to_show");
+		if (_imgDil.empty()) throw std::exception("NO_IMAGE_TO_SHOW");
 
-		cv::resize(imgDil, imgShow, cv::Size(), fx, fy, cv::INTER_AREA);
+		cv::resize(_imgDil, imgShow, cv::Size(), _showScale, _showScale, cv::INTER_AREA);
 		imshow("Image Dilate", imgShow);
 
 		break;
 	}
 	case Image::CONTOUR:
 	{
-		if (imgCont.empty()) throw std::exception("no_image_to_show");
+		if (_imgCont.empty()) throw std::exception("NO_IMAGE_TO_SHOW");
 
-		cv::resize(imgCont, imgShow, cv::Size(), fx, fy, cv::INTER_AREA);
-		imshow("Image Cntour", imgShow);
+		cv::resize(_imgCont, imgShow, cv::Size(), _showScale, _showScale, cv::INTER_AREA);
+		imshow("Image Contour", imgShow);
 
 		break;
 	}
-	case Image::ALL_CONCATINATE:
-	{
-		/*cv::Mat imgConcatTop;
-
-
-		const std::vector<cv::Mat> hConcat = {
-			imgOrig, imgBlur, imgCan
-		};
-
-		for (auto& mat : hConcat)
-		{
-			cv::resize(mat, mat, cv::Size(100, 100));
-		}
-
-		cv::hconcat(hConcat, imgConcatTop);
-		//cv::hconcat(imgConcatTop, imgGray, imgConcatTop);
-
-		//cv::hconcat(,imgCan, imgDil, imgConcatBottom);
-		//cv::hconcat(imgConcatBottom, imgBlur, imgConcatBottom);
-
-
-		//cv::resize(imgConcatBottom, imgConcatBottom, cv::Size(), 0.3, 0.3);
-		//cv::resize(imgConcatTop, imgConcatTop, cv::Size(), 0.3, 0.3);
-		//cv::vconcat(imgConcatTop, imgConcatBottom, imgConcat);
-		cv::imshow("Images All", imgConcatTop);*/
-	}
 	}
 }
 
-cv::Mat& DocumentScanner::getDocument()
+cv::Mat& DocumentScanner::GetDocument()
 {
-	if (!documentDetected) throw std::exception("no_document_to_get");
+	if (!_documentDetected) throw std::exception("NO_DOCUMENT_TO_GET");
 	
-	return imgDoc;
+	return _imgDoc;
 }
 
-void DocumentScanner::showDocument()
+void DocumentScanner::ShowDocument() const
 {
-	if (!documentDetected) throw std::exception("no_document_to_show");
-	cv::Mat imgShow;
-	cv::resize(imgDoc, imgShow, cv::Size(), 0.3, 0.3, cv::INTER_AREA);
+	if (!_documentDetected) throw std::exception("NO_DOCUMENT_TO_SHOW");
 
+	cv::Mat imgShow;
+
+	cv::resize(_imgDoc, imgShow, cv::Size(), 0.3, 0.3, cv::INTER_AREA);
 	cv::imshow("Document", imgShow);
 }
 
-void DocumentScanner::setAspectRatio(double x, double y)
+void DocumentScanner::SetAspectRatio(double x, double y)
 {
-	this->aspectRatio = { x, y };
+	_aspectRatio = { x, y };
 }
 
-void DocumentScanner::setAspectRatio(DocumentFormat documentFormat)
+void DocumentScanner::SetAspectRatio(DocumentFormat documentFormat)
 {
 	switch (documentFormat)
 	{
 	case DocumentFormat::VERTICAL_A4:
 	{
-		this->aspectRatio = { 1.0, 1.41421356237 };
+		_aspectRatio = { 1.0, 1.41421356237 };
 		break;
 	}
 	case DocumentFormat::HORISONTAL_A4:
 	{
-		this->aspectRatio = { 1.41421356237, 1.0 };
+		_aspectRatio = { 1.41421356237, 1.0 };
 		break;
 	}
 	case DocumentFormat::SQUARE:
 	{
-		this->aspectRatio = { 1.0, 1.0 };
+		_aspectRatio = { 1.0, 1.0 };
 		break;
 	}
 	}
 }
 
-void DocumentScanner::detectDocument()
+void DocumentScanner::DetectDocument()
 {
-	if (imgOrig.empty()) throw std::exception("no_image_to_scan");
+	if (_imgOrig.empty()) throw std::exception("NO_IMAGE_TO_SCAN");
+
+	// preprocess image
+	cv::GaussianBlur(_imgOrig, _imgBlur, cv::Size(3, 3), 3, 0);	// blur the image
+
+	cvtColor(_imgBlur, _imgGray, cv::COLOR_BGR2GRAY);				// convert color from BGR to GRAY pallete
+
+	cv::Canny(_imgGray, _imgCan, 25, 75);							// use Canny edge detector
+
+	const cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+	dilate(_imgCan, _imgDil, kernel);
 
 
-	/* preprocess image */
-	cv::GaussianBlur(imgOrig, imgBlur, cv::Size(3, 3), 3, 0);	// blur the image
-
-	cvtColor(imgBlur, imgGray, cv::COLOR_BGR2GRAY);				// convert color from BGR to GRAY pallete
-
-	cv::Canny(imgGray, imgCan, 25, 75);							// use Canny edge detector
-
-	cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-	dilate(imgCan, imgDil, kernel);
-
-
-	/* detect document contour  */
+	// detect document contour
 	std::vector<std::vector<cv::Point>> contours;
 	std::vector<cv::Point> approxedContour;
 	std::vector<cv::Vec4i> hierarchy;
 
-	cv::findContours(imgDil, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+	cv::findContours(_imgDil, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
 	double length, area, maxArea = 0.0;
-	documentDetected = false;
+	_documentDetected = false;
 
 	for (const auto& contour : contours)
 	{
@@ -202,89 +175,105 @@ void DocumentScanner::detectDocument()
 			if (area > maxArea && approxedContour.size() == 4)
 			{
 				maxArea = area;
-				documentDetected = true;
+				_documentDetected = true;
 
 				for (int i = 0; i < 4; i++)
 				{
-					documentContour[i] = approxedContour[i];
+					_documentContour[i] = approxedContour[i];
 				}
 			}
 		}
 	}
 
-	if (documentDetected)
+	if (_documentDetected)
 	{
-		/* reorder document points */
-		int sumPoints[4], subPoints[4];
+		// reorder document points
+		int sumPoints[4]{}, subPoints[4]{};
 
 		for (int i = 0; i < 4; i++)
 		{
-			sumPoints[i] = documentContour[i].x + documentContour[i].y;
-			subPoints[i] = documentContour[i].x - documentContour[i].y;
+			sumPoints[i] = _documentContour[i].x + _documentContour[i].y;
+			subPoints[i] = _documentContour[i].x - _documentContour[i].y;
 		}
 
-		documentContour = {
-			documentContour[std::min_element(sumPoints, sumPoints + 4U) - sumPoints],
-			documentContour[std::max_element(subPoints, subPoints + 4U) - subPoints],
-			documentContour[std::min_element(subPoints, subPoints + 4U) - subPoints],
-			documentContour[std::max_element(sumPoints, sumPoints + 4U) - sumPoints]
+		_documentContour = {
+			_documentContour[std::min_element(sumPoints, sumPoints + 4U) - sumPoints],
+			_documentContour[std::max_element(subPoints, subPoints + 4U) - subPoints],
+			_documentContour[std::min_element(subPoints, subPoints + 4U) - subPoints],
+			_documentContour[std::max_element(sumPoints, sumPoints + 4U) - sumPoints]
 		};
 
-		/* calculate document size */
-		if (aspectRatio.width * aspectRatio.height == 0.0) throw std::exception("aspect_ratio_not_set");
+		// calculate document size
+		if (_aspectRatio.width * _aspectRatio.height == 0.0) throw std::exception("aspect_ratio_not_set");
 
-		double line01Length = lineLength(documentContour[0], documentContour[1]);
-		double line23Length = lineLength(documentContour[2], documentContour[3]);
-		double minLength = std::min(line01Length, line23Length);
+		const double line01Length = _LineLength(_documentContour[0], _documentContour[1]);
+		const double line23Length = _LineLength(_documentContour[2], _documentContour[3]);
+		const double minLength = std::min(line01Length, line23Length);
 
-		documentSize = {
+		_documentSize = {
 			static_cast<int>(minLength),
-			static_cast<int>(minLength / aspectRatio.width * aspectRatio.height)
+			static_cast<int>(minLength / _aspectRatio.width * _aspectRatio.height)
 		};
 
-		/* get warp perspective */
+		// get warp perspective
 		const cv::Point2f srcPoints[] = {
-			documentContour[0],
-			documentContour[1],
-			documentContour[2],
-			documentContour[3]
+			_documentContour[0],
+			_documentContour[1],
+			_documentContour[2],
+			_documentContour[3]
 		};
 		const cv::Point2f dstPoints[] = {
 			{ 0.0f, 0.0f },
-			{ (float)documentSize.width, 0.0f },
-			{ 0.0f, (float)documentSize.height },
-			{ (float)documentSize.width, (float)documentSize.height }
+			{ static_cast<float>(_documentSize.width), 0.0f },
+			{ 0.0f, static_cast<float>(_documentSize.height) },
+			{ static_cast<float>(_documentSize.width), static_cast<float>(_documentSize.height) }
 		};
-		cv::Mat perspectiveTransform = getPerspectiveTransform(srcPoints, dstPoints);
+		const cv::Mat perspectiveTransform = getPerspectiveTransform(srcPoints, dstPoints);
 
 		warpPerspective(
-			imgOrig,
-			imgWarp,
+			_imgOrig,
+			_imgWarp,
 			perspectiveTransform,
-			documentSize
+			_documentSize
 		);
 
-		cv::Rect roi(cropBorder, cropBorder, documentSize.width - cropBorder * 2, documentSize.height - cropBorder * 2);
+		// crop borders
+		const cv::Rect roi(
+			_cropBorder,
+			_cropBorder,
+			_documentSize.width - _cropBorder * 2,
+			_documentSize.height - _cropBorder * 2
+		);
 
-		imgDoc = imgWarp(roi);
+		_imgDoc = _imgWarp(roi);
 
-		/* draw document contour */
-		imgOrig.copyTo(imgCont);
+		// draw document contour
+		_imgOrig.copyTo(_imgCont);
 
-		cv::line(imgCont, documentContour[0], documentContour[1], cv::Scalar(0, 0, 255), 15);
-		cv::line(imgCont, documentContour[1], documentContour[3], cv::Scalar(0, 0, 255), 15);
-		cv::line(imgCont, documentContour[2], documentContour[0], cv::Scalar(0, 0, 255), 15);
-		cv::line(imgCont, documentContour[3], documentContour[2], cv::Scalar(0, 0, 255), 15);
+		cv::line(_imgCont, _documentContour[0], _documentContour[1], cv::Scalar(0, 0, 255), 15);
+		cv::line(_imgCont, _documentContour[1], _documentContour[3], cv::Scalar(0, 0, 255), 15);
+		cv::line(_imgCont, _documentContour[2], _documentContour[0], cv::Scalar(0, 0, 255), 15);
+		cv::line(_imgCont, _documentContour[3], _documentContour[2], cv::Scalar(0, 0, 255), 15);
 
 		for (int i = 0; i < 4; i++)
 		{
-			cv::circle(imgCont, documentContour[i], 30, cv::Scalar(0, 255, 0), cv::FILLED);
-			cv::putText(imgCont, std::to_string(i), documentContour[i], cv::FONT_HERSHEY_PLAIN, 15, cv::Scalar(255, 0, 0), 15);
+			cv::circle(_imgCont, _documentContour[i], 30, cv::Scalar(0, 255, 0), cv::FILLED);
+			cv::putText(_imgCont, std::to_string(i), _documentContour[i], cv::FONT_HERSHEY_PLAIN, 15, cv::Scalar(255, 0, 0), 15);
 		}
 	}
 }
 
-bool DocumentScanner::idDocumentDetected()
+bool DocumentScanner::IsEmpty() const
 {
-	return documentDetected;
+	return _imgOrig.empty();
+}
+
+bool DocumentScanner::IsDocumentDetected() const
+{
+	return _documentDetected;
+}
+
+[[maybe_unused]] int DocumentScanner::WaitKey(int delay) const
+{
+	return cv::waitKey(delay);
 }
