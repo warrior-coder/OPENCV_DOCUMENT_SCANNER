@@ -18,7 +18,7 @@ DocumentScanner::DocumentScanner()
 
 void DocumentScanner::ReadImage(const std::string& filePath)
 {
-	_imgOrig = cv::imread(filePath);
+	_imgOrig = cv::imread(filePath);	 
 }
 
 void DocumentScanner::SetCropBorder(int cropBorder)
@@ -94,11 +94,11 @@ void DocumentScanner::ShowImage(const Image imageFlag) const
 	}
 }
 
-cv::Mat& DocumentScanner::GetDocument()
+cv::Mat DocumentScanner::GetDocument() const
 {
 	if (!_documentDetected) throw std::exception("NO_DOCUMENT_TO_GET");
 	
-	return _imgDoc;
+	return _imgDoc.clone();
 }
 
 void DocumentScanner::ShowDocument() const
@@ -143,14 +143,14 @@ void DocumentScanner::DetectDocument()
 	if (_imgOrig.empty()) throw std::exception("NO_IMAGE_TO_SCAN");
 
 	// preprocess image
-	cv::GaussianBlur(_imgOrig, _imgBlur, cv::Size(3, 3), 3, 0);	// blur the image
+	cv::GaussianBlur(_imgOrig, _imgBlur, cv::Size(3, 3), 3);	// blur the image
 
 	cvtColor(_imgBlur, _imgGray, cv::COLOR_BGR2GRAY);				// convert color from BGR to GRAY pallete
 
 	cv::Canny(_imgGray, _imgCan, 25, 75);							// use Canny edge detector
 
 	const cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-	dilate(_imgCan, _imgDil, kernel);
+	cv::dilate(_imgCan, _imgDil, kernel);
 
 
 	// detect document contour

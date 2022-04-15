@@ -5,7 +5,7 @@ int main()
 {
 	DocumentScanner docScan;
 
-	docScan.ReadImage("Resources/img_02.jpg");
+	docScan.ReadImage("Resources/Image1.jpg");
 
 	if (docScan.IsEmpty())
 	{
@@ -14,8 +14,8 @@ int main()
 	}
 
 	docScan.SetAspectRatio(DocumentFormat::VERTICAL_A4);
-	docScan.SetCropBorder(20);
-	docScan.SetShowScale(0.2);
+	docScan.SetCropBorder(30);
+	docScan.SetShowScale(0.25);
 	docScan.DetectDocument();
 
 	if (!docScan.IsDocumentDetected())
@@ -24,7 +24,11 @@ int main()
 		return 2;
 	}
 
-	docScan.ShowDocument();
+	auto doc = docScan.GetDocument();
+	cv::rotate(doc, doc, cv::ROTATE_90_COUNTERCLOCKWISE);
+	cv::resize(doc, doc, cv::Size(), 0.65, 0.65, cv::INTER_AREA);
+	cv::imshow("Document", doc);
+
 	docScan.ShowImage(Image::ORIGINAL);
 	docScan.ShowImage(Image::BLUR);
 	docScan.ShowImage(Image::GRAY);

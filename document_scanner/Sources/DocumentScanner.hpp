@@ -58,7 +58,7 @@ public:
 	void ShowImage(const Image imageFlag) const;
 	void ShowDocument() const;
 
-	cv::Mat& GetDocument();
+	cv::Mat GetDocument() const;
 
 	void SetAspectRatio(double x, double y);
 	void SetAspectRatio(const DocumentFormat documentFormat);

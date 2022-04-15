@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Resources\img_02.JPG" />
+    <Image Include="Resources\Image1.jpg" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\DocumentScanner.cpp" />
